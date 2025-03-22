@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Interactive Disjointed Force Graph</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            margin: 0;
+            padding: 0;
+            height: 100vh; /* Full viewport height */
+            font-family: arial;
+        }
+
+        .selected {
+            stroke: rgb(158, 217, 217);
+            stroke-width: 2px;
+        }
+        .controls {
+            flex: 0.65; /* Each section takes up one-third of the screen */
+            padding: 10px;
+            box-sizing: border-box;
+            font-size: 15px;
+
+        }
+        .info {
+            flex: 0.7; /* Each section takes up one-third of the screen */
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .info-sub{
+            height: 50vH;
+            flex: 0.8; 
+            padding: 0px;
+            box-sizing: border-box;
+            font-size: 10;
+        }
+
+        /* Ensure the SVG container remains centered */
+        .svg-container {
+            flex: 1.5; /* Slightly larger than the side panels */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        svg {
+            width: 100%;  /* Adjust width as needed */
+            height: 100vh; /* Make it take most of the screen height */
+            background-color: #f9f9f9;
+            display: block;
+        }
+
+        .copy-container {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            margin-bottom: 0px;
+        }
+        .btn {
+            padding: 5px 10px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            transform: scale(1.5);
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .pastebtn {
+            padding: 5px 10px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .pastebtn:hover {
+            background-color: #0056b3;
+        }
+        .copy-btn {
+            padding: 2px 5px;
+            border: none;
+            background-color: white;
+            color: gray;
+            cursor: pointer;
+            border-radius: 5px;
+            border-color: rgb(92, 85, 85);
+        }
+        .copy-btn:hover {
+            background-color: rgb(159, 229, 229);
+            color: white;
+        }
+        .input-field {
+            width: 150;
+            padding: 3px;
+            margin: 3px;
+        }
+
+        table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0, 0;
+        font-size: 12px;
+        text-align: left;
+        }
+        th, td {
+        border: 0px solid #ddd;
+        padding: 0px 0px;
+        }
+    </style>
+</head>
+<body>
+    
+    <body>
+        <!-- Left side: Controls -->
+        <div class="controls">
+            <H3>Settings</H3>
+            <table>
+                <tr>
+                    <td><label for="threshold">Set accuracy threshold:</label></td>
+                    <td align="right"><input style="width: 45px;" type="number" id="threshold" value="0.5" step="0.01" min="0" max="1"></td>
+                </tr>
+            </table>
+
+            <table class="table">
+                <tr>
+                    <td><label for="biggerOut">Below threshold, outer radius:</label></td>
+                    <td align="center"><input type="checkbox" id="biggerOut" style="transform: scale(1.5); accent-color: blue;"></td>
+                </tr>
+                <tr>
+                    <td><label for="invertColor">Darker color, lower time:</label></td>
+                    <td align=center><input type="checkbox" id="invertColor" style="transform: scale(1.5); accent-color: blue;"></td>
+                </tr>
+                <tr>
+                    <td><label for="invertSize">Higher node size, higher accuracy:</label></td>
+                    <td align="center"><input type="checkbox" id="invertSize" style="transform: scale(1.5); accent-color: blue;"></td>
+                </tr>
+            </table>
+            <br>
+
+            <H3>Highlight the nodes with the following:</H3>
+            <!-- Paste Section -->
+            <table>
+                <tr>
+                    <td align="center"><b>Selection:</b></td>
+                    <td align="center">
+                        <label for="orOption">OR</label>
+                        <input type="radio" id="orOption" name="logicOption" value="OR" checked style="transform: scale(1.2); accent-color: blue;">
+                        <label for="andOption">AND</label>
+                        <input type="radio" id="andOption" name="logicOption" value="AND" style="transform: scale(1.2); accent-color: blue;">
+                    </td>
+                </tr>
+                <tr>
+                    <td align=center><b>User:</b></td>
+                    <td style="border-right: none;"><input type="text" id="user-input" class="input-field" placeholder="user"></td>
+                    <td style="border-left: none;" align="right"><button class="pastebtn" onclick="pasteText('user-input')">📋</button></td>
+                </tr>
+                <tr>
+                    <td align="center"><b>Session:</b></td>
+                    <td style="border-right: none;"><input type="text" id="session-input" class="input-field" placeholder="session"></td>
+                    <td style="border-left: none;" align="right"><button class="pastebtn" onclick="pasteText('session-input')">📋</button></td>
+                </tr>
+                <tr>
+                    <td align="center"><b>Repetition:</b></td>
+                    <td style="border-right: none;"><input type="number" id="repetition-input" class="input-field" placeholder="repetition (eg: 1)"></td>
+                    <td style="border-left: none;" align="right"><button class="pastebtn" onclick="pasteText('repetition-input')">📋</button></td>
+                </tr>
+                <tr>
+                    <td align="center"><b>Hand:</b></td>
+                    <td style="border-right: none;"><input type="text" id="hand-input" class="input-field" placeholder="hand (eg: destra)"></td>
+                    <td style="border-left: none;" align="right"><button class="pastebtn" onclick="pasteText('hand-input')">📋</button></td>
+                </tr>
+                <tr>
+                    <td align="center"><b>Dominant hand:</b></td>
+                    <td style="border-right: none;"><input type="text" id="d-hand-input" class="input-field" placeholder="dominant hand (eg: destra)"></td>
+                    <td style="border-left: none;" align="right"><button class="pastebtn" onclick="pasteText('d-hand-input')">📋</button></td>
+                </tr>
+            </table>
+            <br>
+            <p align="center"><input class="btn" type="submit" value="Update" id="update-btn"></input></p>
+        </div>
+    
+        <!-- Middle section: SVG Graph -->
+        <div class="svg-container">
+            <svg id = "graph"></svg>
+        </div>
+    
+        <!-- Right side: Information panel -->
+        <div class="info">
+            <!-- Middle third: Clicked node info -->
+            <div id="clickedNode" class="info-sub">
+                Click on a node to see its information and trajectory
+                <div id="clickedNodeDetails">
+                    <table class="table">
+                        <tr>
+                            <td><b>User:</b></td>
+                            <td style="border-right: none;" colspan=2><span id="userID"></span></td>
+                            <td style="border-left: none;" align=right><button class="copy-btn" onclick="copyText('userID')">🗐</button></td>
+                        </tr>
+                        <tr>
+                            <td><b>Session:</b></td>
+                            <td style="border-right: none;" colspan=2><span id="sessionID"></span></td>
+                            <td style="border-left: none;" align=right><button class="copy-btn" onclick="copyText('sessionID')">🗐</button></td>
+                        </tr>
+                        <tr>
+                            <td><b>ID:</b></td>
+                            <td style="border-right: none;" colspan=2><span id="sid_rid"></span></td>
+                            <td style="border-left: none;" align=right><button class="copy-btn" onclick="copyText('sid_rid')">🗐</button></td>
+                        </tr>
+                        <tr>
+                            <td align><b>Repetition:</b></td>
+                            <td align=center></td>
+                            <td><b>Total repetitions:</b></td>
+                            <td align=center></td>
+                        </tr>
+                        <tr>
+                            <td><b>Accuracy:</b></td>
+                            <td align=center></td>
+                            <td align><b>Hand:</b></td>
+                            <td align=center></td>
+                        </tr>
+                        <tr>
+                            <td><b>Time:</b></td>
+                            <td align=center></td>
+                            <td align><b>Dominant Hand:</b></td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="info-sub"><svg id="trajectories"></svg></div>
+            <input class="btn" type="submit" value="clear" id="clear-btn">
+        </div>
+
+
+        <script src="js/bubble.js"></script>
+
+
+</body>
+</html>
+
+
